@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 st.set_page_config(
-    page_title="AspireAI — Student Stress Predictor",
+    page_title="DOASTAI",
     page_icon="🧠",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -20,10 +20,10 @@ LIKERT_MAP = {"Strongly Disagree": 1, "Disagree": 2, "Undecided": 3, "Agree": 4,
 
 FACTOR_NAMES = {
     "PI": "Personal Inadequacy",
-    "IPT": "Interpersonal & Teaching Problems",
+    "IPT": "Interaction with peers & Teachers",
     "FE": "Fear of Examination",
-    "IFC": "Inadequate Facilities & Campus Environment",
-    "PESES": "Parent Education & Socio-Economic Status",
+    "IFC": "Inadequate Facilities & College",
+    "PESES": "Parents' expectations & Socio-Economic Status",
 }
 
 CATEGORY_COLORS = {
@@ -85,17 +85,17 @@ CLASS_ORDER = [inv_stress_mapping[i] for i in range(len(inv_stress_mapping))]
 # Header
 # ----------------------------------------------------------------------------
 
-st.title("🧠 AspireAI — Academic Stress Predictor")
+st.title("🧠 DOASTAI")
 st.caption(
-    "A validated psychometric screening tool for students aged 18–25. "
+    "A validated psychometric assessment tool for students aged 18–25. "
     "Answer honestly — there are no right or wrong answers."
 )
 with st.expander("About this tool", expanded=False):
     st.markdown(
         """
 This tool estimates an academic stress category from **5 validated psychometric
-dimensions** — Personal Inadequacy, Interpersonal & Teaching Problems, Fear of
-Examination, Inadequate Facilities & Campus Environment, and Parent Education &
+dimensions** — Personal Inadequacy, Interaction with peers & Teachers, Fear of
+Examination, Inadequate Facilities at college, and Parents' expectations &
 Socio-Economic Status — combined with basic demographic information, using a
 model trained on survey data from students aged 18–25.
 

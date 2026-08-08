@@ -35,10 +35,10 @@ LIKERT_MAP = {"Strongly Disagree": 1, "Disagree": 2, "Undecided": 3, "Agree": 4,
 
 FACTOR_NAMES = {
     "PI": "Personal Inadequacy",
-    "IPT": "Interpersonal & Teaching Problems",
+    "IPT": "Interaction with Peers & Teachers",
     "FE": "Fear of Examination",
-    "IFC": "Inadequate Facilities & Campus Environment",
-    "PESES": "Parent Education & Socio-Economic Status",
+    "IFC": "Inadequate Facilities at College",
+    "PESES": "Parental Expectations & Socio-Economic Status",
 }
 
 CATEGORY_COLORS = {
@@ -488,10 +488,11 @@ def run_sheets_diagnostics() -> dict:
         return result
 
     try:
-        # Harmless read-modify-read: write a marker cell far outside normal data, then clear it.
-        test_cell = "ZZ1"
-        sheet.update_acell(test_cell, "diagnostic_check")
-        sheet.update_acell(test_cell, "")
+        # Real-world-equivalent test: append a row (same operation the app actually
+        # uses), confirm it landed, then remove it. Avoids any grid-size assumptions.
+        existing_row_count = len(sheet.get_all_values())
+        sheet.append_row(["__diagnostic_check__"])
+        sheet.delete_rows(existing_row_count + 1)
         result["can_write"] = True
     except Exception as e:  # noqa: BLE001
         result["error"] = f"Connected and can read, but can't write (likely the service account only has Viewer access, not Editor): {e}"
@@ -910,8 +911,8 @@ def render_welcome():
         st.markdown(
             """
 This tool estimates an academic stress category from **5 validated psychometric
-dimensions** — Personal Inadequacy, Interpersonal & Teaching Problems, Fear of
-Examination, Inadequate Facilities & Campus Environment, and Parent Education &
+dimensions** — Personal Inadequacy, Interaction with peers & Teachers, Fear of
+Examination, Inadequate Facilities at college, and Parental expectations &
 Socio-Economic Status — combined with basic demographic information.
 
 **This is a research/screening tool, not a clinical diagnosis.** If you are

@@ -35,10 +35,10 @@ LIKERT_MAP = {"Strongly Disagree": 1, "Disagree": 2, "Undecided": 3, "Agree": 4,
 
 FACTOR_NAMES = {
     "PI": "Personal Inadequacy",
-    "IPT": "Interaction with Peers & Teachers",
+    "IPT": "Interpersonal & Teaching Problems",
     "FE": "Fear of Examination",
-    "IFC": "Inadequate Facilities at College",
-    "PESES": "Parental Expectations & Socio-Economic Status",
+    "IFC": "Inadequate Facilities & Campus Environment",
+    "PESES": "Parent Education & Socio-Economic Status",
 }
 
 CATEGORY_COLORS = {
@@ -441,8 +441,17 @@ def log_response(row_dict: dict) -> tuple[bool, str | None]:
         return False, "not_configured"
     try:
         sheet = get_gsheet()
-        if not sheet.get_all_values():
+        current_values = sheet.get_all_values()
+        if not current_values:
             sheet.append_row(SHEET_COLUMNS)
+        elif current_values[0] != SHEET_COLUMNS:
+            return False, (
+                "The sheet's header row doesn't match this app's expected columns — likely "
+                "left over from an earlier version of the app. Clear all content in the "
+                "Google Sheet (select all cells, delete) and submit again so a correct header "
+                "can be written. Existing rows under the old header won't be found by code "
+                "lookup until this is fixed."
+            )
         sheet.append_row([str(row_dict.get(c, "")) for c in SHEET_COLUMNS])
         return True, None
     except Exception as e:  # noqa: BLE001
@@ -512,7 +521,8 @@ def fetch_all_records() -> list[dict]:
 
 
 def fetch_records_for_code(code: str) -> list[dict]:
-    records = [r for r in fetch_all_records() if str(r.get("Unique_Code", "")).strip() == code.strip()]
+    target = code.strip().upper()
+    records = [r for r in fetch_all_records() if str(r.get("Unique_Code", "")).strip().upper() == target]
 
     def _sub_no(r):
         try:
@@ -911,8 +921,8 @@ def render_welcome():
         st.markdown(
             """
 This tool estimates an academic stress category from **5 validated psychometric
-dimensions** — Personal Inadequacy, Interaction with peers & Teachers, Fear of
-Examination, Inadequate Facilities at college, and Parental expectations &
+dimensions** — Personal Inadequacy, Interpersonal & Teaching Problems, Fear of
+Examination, Inadequate Facilities & Campus Environment, and Parent Education &
 Socio-Economic Status — combined with basic demographic information.
 
 **This is a research/screening tool, not a clinical diagnosis.** If you are

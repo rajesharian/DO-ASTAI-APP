@@ -449,6 +449,57 @@ def log_response(row_dict: dict) -> tuple[bool, str | None]:
         return False, str(e)
 
 
+def run_sheets_diagnostics() -> dict:
+    """Live-checks the Google Sheets connection step by step and returns what actually failed."""
+    result = {
+        "gspread_installed": GSPREAD_AVAILABLE,
+        "secrets_has_service_account": "gcp_service_account" in st.secrets,
+        "secrets_has_sheet_id": "sheet_id" in st.secrets,
+        "service_account_email": None,
+        "connected": False,
+        "can_read": False,
+        "can_write": False,
+        "error": None,
+    }
+    if not GSPREAD_AVAILABLE:
+        result["error"] = "gspread/google-auth aren't installed — check requirements.txt was updated and redeployed."
+        return result
+    if "gcp_service_account" not in st.secrets or "sheet_id" not in st.secrets:
+        result["error"] = "Secrets are missing 'gcp_service_account' and/or 'sheet_id' — check Streamlit Settings → Secrets."
+        return result
+
+    try:
+        result["service_account_email"] = st.secrets["gcp_service_account"].get("client_email")
+    except Exception:
+        pass
+
+    try:
+        sheet = get_gsheet()
+        result["connected"] = True
+    except Exception as e:  # noqa: BLE001
+        result["error"] = f"Could not authenticate/open the sheet: {e}"
+        return result
+
+    try:
+        sheet.get_all_values()
+        result["can_read"] = True
+    except Exception as e:  # noqa: BLE001
+        result["error"] = f"Connected, but couldn't read the sheet (likely a sharing/permissions issue): {e}"
+        return result
+
+    try:
+        # Harmless read-modify-read: write a marker cell far outside normal data, then clear it.
+        test_cell = "ZZ1"
+        sheet.update_acell(test_cell, "diagnostic_check")
+        sheet.update_acell(test_cell, "")
+        result["can_write"] = True
+    except Exception as e:  # noqa: BLE001
+        result["error"] = f"Connected and can read, but can't write (likely the service account only has Viewer access, not Editor): {e}"
+        return result
+
+    return result
+
+
 def fetch_all_records() -> list[dict]:
     if not SHEETS_CONFIGURED:
         return []
@@ -876,6 +927,22 @@ counselor, doctor, or a trusted person in your life.
             "'Returning User' comparison feature needs Google Sheets set up first."
         )
 
+    with st.expander("🔧 Connection diagnostics (Google Sheets)", expanded=False):
+        if st.button("Run diagnostics"):
+            diag = run_sheets_diagnostics()
+            st.write("gspread/google-auth installed:", "✅" if diag["gspread_installed"] else "❌")
+            st.write("Secrets has `gcp_service_account`:", "✅" if diag["secrets_has_service_account"] else "❌")
+            st.write("Secrets has `sheet_id`:", "✅" if diag["secrets_has_sheet_id"] else "❌")
+            if diag["service_account_email"]:
+                st.write("Service account email:", f"`{diag['service_account_email']}`")
+            st.write("Can authenticate & open sheet:", "✅" if diag["connected"] else "❌")
+            st.write("Can read the sheet:", "✅" if diag["can_read"] else "❌")
+            st.write("Can write to the sheet:", "✅" if diag["can_write"] else "❌")
+            if diag["error"]:
+                st.error(diag["error"])
+            elif diag["can_write"]:
+                st.success("Everything checks out — Google Sheets is fully connected.")
+
     st.divider()
     st.subheader("Let's get started")
     col1, col2 = st.columns(2)
@@ -921,12 +988,13 @@ def render_new_wizard():
         sheet_row["Predicted_Category"] = results["predicted_label"]
         sheet_row["Confidence"] = round(results["confidence"], 4)
 
-        saved, _ = log_response(sheet_row)
+        saved, err = log_response(sheet_row)
 
         st.session_state["last_code"] = code
         st.session_state["last_results"] = results
         st.session_state["last_sheet_row"] = sheet_row
         st.session_state["last_saved"] = saved
+        st.session_state["last_save_error"] = err
         goto("new_results")
 
     render_wizard(NEW_USER_STEPS, mode="new", on_complete=on_complete)
@@ -958,6 +1026,10 @@ def render_new_results():
         st.caption("✅ Your response has been saved. Use this code next time to compare your progress.")
     elif SHEETS_CONFIGURED:
         st.caption("⚠️ Couldn't save to persistent storage — this code won't be retrievable later.")
+        err = st.session_state.get("last_save_error")
+        if err and err != "not_configured":
+            with st.expander("Why did this fail?"):
+                st.code(err)
     else:
         st.caption("⚠️ Persistent storage isn't configured — this code won't be retrievable in a future session.")
 
@@ -1043,11 +1115,12 @@ def render_return_wizard():
         sheet_row["Predicted_Category"] = results["predicted_label"]
         sheet_row["Confidence"] = round(results["confidence"], 4)
 
-        saved, _ = log_response(sheet_row)
+        saved, err = log_response(sheet_row)
 
         st.session_state["last_results"] = results
         st.session_state["last_sheet_row"] = sheet_row
         st.session_state["last_saved"] = saved
+        st.session_state["last_save_error"] = err
         st.session_state["last_prev"] = records[-1]  # most recent prior submission
         st.session_state["last_all_rows"] = records + [sheet_row]
         goto("return_results")
@@ -1074,6 +1147,10 @@ def render_return_results():
         st.caption("✅ This follow-up has been saved.")
     else:
         st.caption("⚠️ Couldn't save this follow-up to persistent storage.")
+        err = st.session_state.get("last_save_error")
+        if err and err != "not_configured":
+            with st.expander("Why did this fail?"):
+                st.code(err)
 
     excel_bytes = make_excel_bytes(all_rows)
     st.download_button(

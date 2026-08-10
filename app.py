@@ -442,7 +442,16 @@ def log_response(row_dict: dict) -> tuple[bool, str | None]:
     try:
         sheet = get_gsheet()
         current_values = sheet.get_all_values()
-        if not current_values:
+        # Google Sheets can report a "visually blank" sheet as a non-empty list (e.g. one
+        # row of empty strings left over from prior formatting/used-range metadata) even
+        # after all content has been deleted — check for that explicitly rather than
+        # trusting truthiness of the returned list.
+        is_effectively_blank = not current_values or all(
+            all(cell == "" for cell in row) for row in current_values
+        )
+        if is_effectively_blank:
+            if current_values:
+                sheet.clear()
             sheet.append_row(SHEET_COLUMNS)
         elif current_values[0] != SHEET_COLUMNS:
             return False, (

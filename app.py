@@ -921,7 +921,7 @@ def goto(page: str):
 # ----------------------------------------------------------------------------
 
 def render_welcome():
-    st.title("🧠 AspireAI — Academic Stress Predictor")
+    st.title("🧠 DOAST-AI")
     st.caption(
         "A validated psychometric screening tool for students aged 18–25. "
         "Answer honestly — there are no right or wrong answers."
@@ -931,7 +931,7 @@ def render_welcome():
             """
 This tool estimates an academic stress category from **5 validated psychometric
 dimensions** — Personal Inadequacy, Interaction with Peers & Teachers, Fear of
-Examination, Inadequate Facilities at College, and Parent Education &
+Examination, Inadequate Facilities at College, and PArenatl Expectations &
 Socio-Economic Status — combined with basic demographic information.
 
 **This is a research/screening tool, not a clinical diagnosis.** If you are

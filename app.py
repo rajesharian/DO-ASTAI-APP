@@ -931,7 +931,7 @@ def render_welcome():
             """
 This tool estimates an academic stress category from **5 validated psychometric
 dimensions** — Personal Inadequacy, Interaction with Peers & Teachers, Fear of
-Examination, Inadequate Facilities at College, and PArenatl Expectations &
+Examination, Inadequate Facilities at College, and Parental Expectations &
 Socio-Economic Status — combined with basic demographic information.
 
 **This is a research/screening tool, not a clinical diagnosis.** If you are

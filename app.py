@@ -20,7 +20,7 @@ except ImportError:
     GSPREAD_AVAILABLE = False
 
 st.set_page_config(
-    page_title="AspireAI — Student Stress Predictor",
+    page_title="DOAST-AI",
     page_icon="🧠",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -35,10 +35,10 @@ LIKERT_MAP = {"Strongly Disagree": 1, "Disagree": 2, "Undecided": 3, "Agree": 4,
 
 FACTOR_NAMES = {
     "PI": "Personal Inadequacy",
-    "IPT": "Interpersonal & Teaching Problems",
+    "IPT": "Interaction with Peers & Teachers",
     "FE": "Fear of Examination",
-    "IFC": "Inadequate Facilities & Campus Environment",
-    "PESES": "Parent Education & Socio-Economic Status",
+    "IFC": "Inadequate Facilities at College",
+    "PESES": "Parental Expectations & Socio-Economic Status",
 }
 
 CATEGORY_COLORS = {
@@ -154,7 +154,7 @@ FACTOR_INTERVENTIONS = {
         ],
     },
     "IPT": {
-        "title": "Interpersonal & Teaching Problems",
+        "title": "Interaction with Peers & Teachers",
         "tips": [
             "If specific interactions with teachers or peers are a recurring source of stress, consider raising it with an academic advisor or student support office.",
             "Building even one or two supportive peer relationships can meaningfully reduce isolation.",
@@ -170,7 +170,7 @@ FACTOR_INTERVENTIONS = {
         ],
     },
     "IFC": {
-        "title": "Inadequate Facilities & Campus Environment",
+        "title": "Inadequate Facilities at College",
         "tips": [
             "If specific facilities (library access, labs, hostel conditions, etc.) are a real bottleneck, raising it with student representatives or administration can lead to actual fixes, not just coping.",
             "Where possible, identify alternate quiet study spaces (public library, empty classrooms) if your usual environment is a stressor.",
@@ -178,7 +178,7 @@ FACTOR_INTERVENTIONS = {
         ],
     },
     "PESES": {
-        "title": "Parent Education & Socio-Economic Status",
+        "title": "Parental Expectations & Socio-Economic Status",
         "tips": [
             "If financial pressure is a major factor, check whether your institution offers scholarships, fee waivers, or emergency student funds.",
             "Talking openly with family about academic and financial expectations, even briefly, can reduce the weight of carrying it silently.",
@@ -930,8 +930,8 @@ def render_welcome():
         st.markdown(
             """
 This tool estimates an academic stress category from **5 validated psychometric
-dimensions** — Personal Inadequacy, Interpersonal & Teaching Problems, Fear of
-Examination, Inadequate Facilities & Campus Environment, and Parent Education &
+dimensions** — Personal Inadequacy, Interaction with Peers & Teachers, Fear of
+Examination, Inadequate Facilities at College, and Parent Education &
 Socio-Economic Status — combined with basic demographic information.
 
 **This is a research/screening tool, not a clinical diagnosis.** If you are

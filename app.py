@@ -20,7 +20,7 @@ except ImportError:
     GSPREAD_AVAILABLE = False
 
 st.set_page_config(
-    page_title="DOAST-AI",
+    page_title="AspireAI — Student Stress Predictor",
     page_icon="🧠",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -369,6 +369,14 @@ POSTGRAD_GROUPS = {
     "Other": "Special (vi)",
 }
 
+# Institution_Type raw data has 9 messy values (specific institution names,
+# "Coaching", "Competitive exams", etc.) — simplified to 3 clean categories.
+INSTITUTION_TYPE_GROUPS = {
+    "University": "University",
+    "College": "College",
+    "Other": "Campus",
+}
+
 NOT_APPLICABLE_RAW = "Not Applicable"
 
 
@@ -383,6 +391,9 @@ def clean_encoder_options(_bundle):
             continue
         if field == "Postgraduate":
             options[field] = {l: r for l, r in POSTGRAD_GROUPS.items() if r in known_classes}
+            continue
+        if field == "Institution_Type":
+            options[field] = {l: r for l, r in INSTITUTION_TYPE_GROUPS.items() if r in known_classes}
             continue
         display_to_actual = {}
         for raw in encoder.classes_:
@@ -921,7 +932,7 @@ def goto(page: str):
 # ----------------------------------------------------------------------------
 
 def render_welcome():
-    st.title("🧠 DOAST-AI")
+    st.title("🧠 AspireAI — Academic Stress Predictor")
     st.caption(
         "A validated psychometric screening tool for students aged 18–25. "
         "Answer honestly — there are no right or wrong answers."
